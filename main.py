@@ -1,5 +1,5 @@
 import streamlit as st
 
-st.title('이진호는 ㅂ1ㅅ이다!')
+st.title('나의 첫 Streamlit 프로젝트!')
 st.write('Hello streamlit')
 
