@@ -1,7 +1,5 @@
 import streamlit as st
 
-import streamlit as st
-
 # 페이지 기본 설정
 st.set_page_config(
     page_title="세계 맛집 & 대표 음식 추천기",
