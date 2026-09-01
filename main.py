@@ -1,52 +1,142 @@
 import streamlit as st
 
+import streamlit as st
+
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="어둠의 MBTI 진로 상담소",
-    page_icon="💀",
-    layout="centered"
+    page_title="세계 맛집 & 대표 음식 추천기",
+    page_icon="🍽️",
+    layout="wide"
 )
 
-# 헤더 영역
-st.title("💀 어둠의 MBTI 진로 상담소 💀")
-st.write("너의 운명은 이미 결정되어 있다... 네 유형을 선택해라.")
-
-# 테마 이미지 (웹 상의 무서운 이미지 URL 활용)
-scary_image_url = "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=800&auto=format&fit=crop"
-st.image(scary_image_url, caption="너를 지켜보고 있다...", use_container_width=True)
-
-st.markdown("---")
-
-# MBTI별 진로 데이터
-mbti_careers = {
-    "INTJ": {"career": "AI 연구원, 사이버 보안 전문가, 데이터 분석가", "warning": "너의 치밀한 계획이 세상을 지배할지도 모른다..."},
-    "INTP": {"career": "이론 물리학자, 소프트웨어 엔지니어, 철학자", "warning": "너무 깊은 생각은 심연을 불러오는 법."},
-    "ENTJ": {"career": "기업 CEO, 경영 컨설턴트, 정치가", "warning": "권력을 향한 집착이 너를 삼키지 않도록 조심해라."},
-    "ENTP": {"career": "벤처 창업가, 변호사, 기획자", "warning": "선 넘는 토론은 끝없는 혼돈을 가져온다."},
-    "INFJ": {"career": "심리치료사, 작가, 인권 운동가", "warning": "타인의 어둠을 치유하다 너 자신이 물들 것이다."},
-    "INFP": {"career": "소설가, 시인, 그래픽 디자이너", "warning": "너의 머릿속 환상이 현실을 침식하고 있다."},
-    "ENFJ": {"career": "교사, 사회복지사, 인사팀 담당자", "warning": "모두를 구하려는 욕망이 너를 파멸로 이끈다."},
-    "ENFP": {"career": "크리에이터, 마케터, 이벤트 기획자", "warning": "넘치는 에너지가 산산조각 나지 않게 잡아라."},
-    "ISTJ": {"career": "회계사, 공무원, 법률 사무원", "warning": "규칙에 갇혀 영혼이 마모되어 가고 있다."},
-    "ISFJ": {"career": "간호사, 초등교사, 사회복지사", "warning": "희생만 하다가는 껍데기만 남게 될 것이다."},
-    "ESTJ": {"career": "프로젝트 매니저, 경찰관, 금융 분석가", "warning": "통제하려는 집착이 주변을 피로 물들인다."},
-    "ESFJ": {"career": "승무원, 영양사, 고객만족 팀장", "warning": "타인의 시선에 갇힌 기괴한 인형이 되지 마라."},
-    "ISTP": {"career": "기계 공학자, 응급구조사, 데이터 엔지니어", "warning": "침묵 속에서 다듬는 감정이 무기가 된다."},
-    "ISFP": {"career": "화가, 사진작가, 수의사 테크니션", "warning": "조용한 감성 뒤에 숨겨진 그늘을 경계해라."},
-    "ESTP": {"career": "응급의학 의사, 펀드매니저, 스포츠 감독", "warning": "자극만을 쫓다가는 벼랑 끝으로 떨어진다."},
-    "ESFP": {"career": "배우, 이벤트 MC, 패션 디자이너", "warning": "조명이 꺼진 뒤 찾아올 지독한 고독을 견뎌라."}
+# 국가별 추천 데이터베이스
+DATABASE = {
+    "한국": {
+        "flag": "🇰🇷",
+        "food": "비빔밥",
+        "food_desc": "다양한 신선한 나물, 고기, 고추장을 밥과 함께 비벼 먹는 한국의 대표 건강식입니다.",
+        "restaurant": "목멱산방",
+        "rest_desc": "서울 남산 자락에 위치한 미쉐린 가이드 선정 비빔밥 전문점으로, 깔끔하고 정갈한 한상을 제공합니다.",
+        "location": "서울 중구 남산공원길 625",
+        "rating": "4.6 / 5.0"
+    },
+    "일본": {
+        "flag": "🇯🇵",
+        "food": "돈코츠 라멘",
+        "food_desc": "돼지 뼈를 긴 시간 푹 고아낸 진하고 고소한 국물과 쫄깃한 면발이 특징인 일식 라멘입니다.",
+        "restaurant": "이치란 (Ichiran) 본점",
+        "rest_desc": "독서실 형태의 1인 독서대 좌석으로 유명하며, 취향에 맞게 맛과 면의 익힘을 조절할 수 있습니다.",
+        "location": "후쿠오카시 하카타구 나카스 5-3-2",
+        "rating": "4.5 / 5.0"
+    },
+    "이탈리아": {
+        "flag": "🇮🇹",
+        "food": "나폴리 화덕 피자 (Margherita)",
+        "food_desc": "신선한 토마토소스, 모짜렐라 치즈, 바질만으로 본연의 맛을 내는 참나무 화덕 피자입니다.",
+        "restaurant": "L'Antica Pizzeria da Michele",
+        "rest_desc": "1870년부터 전통을 이어온 나폴리의 전설적인 피자집으로, 영화 '먹고 기도하고 사랑하라'에 등장했습니다.",
+        "location": "Via Cesare Sersale, 1, 80139 Napoli NA, Italy",
+        "rating": "4.7 / 5.0"
+    },
+    "프랑스": {
+        "flag": "🇫🇷",
+        "food": "뵈프 부르기뇽 (Bœuf Bourguignon)",
+        "food_desc": "소고기를 레드 와인, 버섯, 양파와 함께 진하게 조려낸 프랑스 부르고뉴 지방의 전통 스튜입니다.",
+        "restaurant": "Au Petit Riche",
+        "rest_desc": "1854년에 개업한 파리의 정통 부용(Bouillon) 스타일 비스트로로, 클래식한 프랑스 요리를 맛볼 수 있습니다.",
+        "location": "25 Rue Le Peletier, 75009 Paris, France",
+        "rating": "4.4 / 5.0"
+    },
+    "태국": {
+        "flag": "🇹🇭",
+        "food": "팟타이 (Pad Thai)",
+        "food_desc": "쌀국수에 계란, 숙주, 새우, 타마린드 소스를 넣어 달콤하고 새콤하게 볶아낸 태국의 대표 국수 요리입니다.",
+        "restaurant": "팁싸마이 (Thipsamai)",
+        "rest_desc": "방콕에서 가장 유명한 팟타이 전문점으로, 얇은 계란지단으로 감싼 오렌지 에그 팟타이가 시그니처입니다.",
+        "location": "313 315 Maha Chai Rd, Samran Rat, Phra Nakhon, Bangkok 10200",
+        "rating": "4.3 / 5.0"
+    },
+    "미국": {
+        "flag": "🇺🇸",
+        "food": "수제 스모크 바비큐 립",
+        "food_desc": "훈연 칩으로 오랜 시간 천천히 구워내 부드럽고 스모키한 풍미가 진하게 배어있는 바비큐입니다.",
+        "restaurant": "Joe's Kansas City Bar-B-Que",
+        "rest_desc": "주유소를 개조해 만든 캔자스시티의 명물로, 세계적으로 손꼽히는 바비큐 맛집입니다.",
+        "location": "3002 W 47th Ave, Kansas City, KS 66103",
+        "rating": "4.8 / 5.0"
+    },
+    "베트남": {
+        "flag": "🇻🇳",
+        "food": "소고기 쌀국수 (Pho Bo)",
+        "food_desc": "진하게 우려낸 소고기 육수에 쌀국수와 신선한 허브, 양지머리를 올려 먹는 베트남의 국민 요리입니다.",
+        "restaurant": "퍼10 리꾸옥수 (Pho 10 Ly Quoc Su)",
+        "rest_desc": "하노이 3대 쌀국수집 중 하나로, 깊은 육수 맛과 미쉐린 빕구르망에 선정된 검증된 맛집입니다.",
+        "location": "10 P. Lý Quốc Sư, Hàng Trống, Hoàn Kiếm, Hà Nội",
+        "rating": "4.4 / 5.0"
+    },
+    "스페인": {
+        "flag": "🇪🇸",
+        "food": "해산물 빠에야 (Paella)",
+        "food_desc": "샤프란 향이 배어있는 밥에 신선한 올리브유, 새우, 홍합 등 해산물을 넣어 팬에 볶아낸 요리입니다.",
+        "restaurant": "7 Portes",
+        "rest_desc": "1836년 바르셀로나에 문을 연 역사적인 레스토랑으로, 피카소와 미로도 즐겨 찾았던 빠에야 명가입니다.",
+        "location": "Passeig de Isabel II, 14, 08003 Barcelona, Spain",
+        "rating": "4.5 / 5.0"
+    }
 }
 
-# 사용자 입력 받기
-selected_mbti = st.selectbox(
-    "너의 MBTI 유형을 고르거라:",
-    list(mbti_careers.keys())
-)
+# 헤더 영역
+st.title("🌏 세계 맛집 & 대표 음식 추천기")
+st.caption("궁금한 나라의 이름을 입력하거나 선택하시면 대표 음식과 명품 맛집을 찾아드립니다.")
 
-# 결과 출력 버튼
-if st.button("운명의 진로 확인하기 🔮"):
-    info = mbti_careers[selected_mbti]
+st.divider()
+
+# 검색 영역 (사이드바 또는 메인 화면)
+col1, col2 = st.columns([1, 2])
+
+with col1:
+    st.subheader("🔍 국가 검색")
     
-    st.subheader(f"🕯️ [{selected_mbti}] 너에게 지정된 지옥의 과업")
-    st.success(f"**추천 진로:** {info['career']}")
-    st.warning(f"**경고:** {info['warning']}")
+    # 드롭다운 선택 또는 직접 입력
+    selected_country = st.selectbox(
+        "목록에서 선택하기",
+        options=list(DATABASE.keys())
+    )
+    
+    custom_input = st.text_input("또는 직접 입력하기", placeholder="예: 한국, 일본, 태국...")
+    
+    # 최종 선택 국가 결정
+    target_country = custom_input.strip() if custom_input.strip() else selected_country
+
+with col2:
+    if target_country in DATABASE:
+        data = DATABASE[target_country]
+        
+        st.subheader(f"{data['flag']} {target_country} 추천 결과")
+        
+        # 대표 음식 카드리
+        with st.container(border=True):
+            st.markdown(f"### 🍱 대표 음식: **{data['food']}**")
+            st.write(data['food_desc'])
+            
+        # 맛집 카드
+        with st.container(border=True):
+            st.markdown(f"### 🏠 추천 맛집: **{data['restaurant']}**")
+            st.write(data['rest_desc'])
+            
+            # 메트릭 표시
+            m_col1, m_col2 = st.columns(2)
+            with m_col1:
+                st.metric(label="📍 위치/주소", value=data['location'].split(',')[0])
+            with m_col2:
+                st.metric(label="⭐ 평점", value=data['rating'])
+                
+            st.caption(f"전체 주소: {data['location']}")
+            
+    else:
+        st.warning(f"⚠️ '{target_country}'에 대한 데이터가 아직 준비되지 않았습니다.")
+        st.info("현재 지원 가능한 국가: " + ", ".join(DATABASE.keys()))
+
+# 하단 안내 메시지
+st.divider()
+st.caption("💡 Streamlit으로 제작된 서비스입니다. `pip install streamlit` 후 `streamlit run app.py`로 실행할 수 있습니다.")
