@@ -1,113 +1,128 @@
 import streamlit as st
 
-# 페이지 기본 설정 (와이드 모드)
+# 페이지 기본 설정
 st.set_page_config(
     page_title="Gourmet World - 세계 미식 여행",
-    page_icon="🎨",
+    page_icon="✈️",
     layout="wide"
 )
 
-# --- 🎨 웹폰트 및 세련된 감성 CSS 애니메이션 스타일 ---
+# --- 🎨 배경색 추가 및 럭셔리 트래블 매거진 디자인 CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Poppins:wght@600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;900&family=Poppins:wght@600;800&display=swap');
 
-    html, body, [class*="css"] {
+    /* 1. 전체 화면 배경색 설정 (따뜻한 고급 크림 톤 + 부드러운 그러데이션) */
+    .stApp {
+        background: linear-gradient(135deg, #FDFBF7 0%, #EEF2F5 100%) !important;
         font-family: 'Noto Sans KR', sans-serif;
-        background-color: #FAFAFC;
     }
-    
-    /* 1. 감성 네온 스티커 히어로 배너 */
+
+    /* 2. 상단 히어로 배너 (선명한 트로피컬 그러데이션 & 스티커 비행기) */
     .hero-banner {
-        background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%);
+        background: linear-gradient(135deg, #FF6B6B 0%, #556270 100%);
         border-radius: 28px;
-        padding: 3rem 2rem;
+        padding: 3.5rem 2rem;
         color: white;
         text-align: center;
-        box-shadow: 0 20px 40px rgba(221, 36, 118, 0.25);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
         margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
     }
     .hero-title {
         font-family: 'Poppins', sans-serif;
-        font-size: 3.2rem;
+        font-size: 3.4rem;
         font-weight: 800;
         letter-spacing: -1px;
         margin-bottom: 0.5rem;
-        text-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        text-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     .hero-sub {
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         font-weight: 300;
         opacity: 0.95;
     }
+
+    /* 3. 사이드바 영역 전용 배경 스타일 */
+    [data-testid="stSidebar"] {
+        background-color: #F8FAF9 !important;
+        border-right: 1px solid #E2E8F0;
+    }
     
-    /* 2. 스티커 태그 */
+    .sidebar-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+    }
+
+    /* 4. 입체적인 스티커 태그 디자인 */
     .sticker-tag {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 14px;
-        font-size: 0.88rem;
+        padding: 8px 16px;
+        font-size: 0.9rem;
         font-weight: 700;
         border-radius: 30px;
-        margin-right: 6px;
+        margin-right: 8px;
         margin-bottom: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         transition: transform 0.2s ease;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
     .sticker-tag:hover {
-        transform: translateY(-3px) rotate(-2deg);
+        transform: translateY(-3px) scale(1.02);
     }
-    .tag-asia { background: #E0F2FE; color: #0284C7; }
-    .tag-europe { background: #F3E8FF; color: #9333EA; }
-    .tag-america { background: #DCFCE7; color: #16A34A; }
-    .tag-other { background: #FEF3C7; color: #D97706; }
-    .tag-highlight { background: #FEF08A; color: #CA8A04; }
-    .tag-star { background: #FFEDD5; color: #EA580C; }
+    
+    .tag-asia { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
+    .tag-europe { background: #F3E8FF; color: #7E22CE; border: 1px solid #E9D5FF; }
+    .tag-america { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+    .tag-other { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+    .tag-star { background: #FFEDD5; color: #C2410C; border: 1px solid #FED7AA; }
 
-    /* 3. 호버 모션 입체 카드 */
+    /* 5. 메인 입체 카드 (글래스모피즘 효과 + 따뜻한 흰색 카드) */
     .styled-card {
-        background: white;
-        border-radius: 20px;
-        padding: 1.8rem;
-        border: 1px solid #F1F5F9;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-        margin-bottom: 1.5rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.8rem;
+        transition: all 0.3s ease;
     }
     .styled-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-        border-color: #E2E8F0;
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.09);
     }
+    
     .card-label {
         font-size: 0.8rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #94A3B8;
-        font-weight: 700;
-        margin-bottom: 4px;
+        letter-spacing: 1.5px;
+        color: #FF6B6B;
+        font-weight: 800;
+        margin-bottom: 6px;
     }
     .card-heading {
-        font-size: 1.35rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: #0F172A;
+        color: #1E293B;
         margin-bottom: 12px;
     }
     
-    .sidebar-box {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 20px;
-        border: 1px solid #F1F5F9;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    /* 이미지 모서리 라운딩 및 그림자 */
+    .stImage img {
+        border-radius: 20px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 📦 20개국 대용량 미식 데이터베이스 (고화질 음식 사진 포함) ---
+# --- 📦 20개국 미식 데이터베이스 ---
 DATABASE = {
-    # --- 아시아 (8개국) ---
     "한국": {
         "flag": "🇰🇷", "continent": "아시아", "tag": "🌶️ 매콤달콤", "food": "전통 비빔밥",
         "image": "https://images.unsplash.com/photo-1553163147-622ab57be1c7?auto=format&fit=crop&w=1000&q=80",
@@ -171,8 +186,6 @@ DATABASE = {
         "restaurant": "Bukhara", "rest_desc": "뉴델리 ITC 마우리아 호텔에 위치한 세계적인 명성의 전통 북인도 요리 전문점입니다.",
         "location": "ITC Maurya, Diplomatic Enclave, New Delhi, India", "rating": "4.8 / 5.0", "tip": "갓 구워 나온 버터 난을 커리에 찍어 손으로 먹어야 제맛입니다."
     },
-
-    # --- 유럽 (7개국) ---
     "이탈리아": {
         "flag": "🇮🇹", "continent": "유럽", "tag": "🍕 정통 화덕", "food": "나폴리 피자",
         "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1000&q=80",
@@ -222,8 +235,6 @@ DATABASE = {
         "restaurant": "Hafız Mustafa 1864", "rest_desc": "이스탄불의 전통 케밥 및 160년 전통의 터키 디저트를 함께 맛볼 수 있는 명소입니다.",
         "location": "Hobyar, Hamidiye Cd. No:84, Fatih/İstanbul, Turkey", "rating": "4.7 / 5.0", "tip": "매콤한 고추 소스(Acı Biber)를 곁들이면 훨씬 깔끔합니다."
     },
-
-    # --- 아메리카 (4개국) ---
     "미국": {
         "flag": "🇺🇸", "continent": "아메리카", "tag": "🍖 스모키 훈연", "food": "수제 바비큐 립",
         "image": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80",
@@ -257,9 +268,9 @@ DATABASE = {
 # --- 🎈 1. 상단 감성 히어로 배너 ---
 st.markdown("""
 <div class="hero-banner">
-    <div style="font-size: 2.8rem; margin-bottom: 10px;">✨ ✈️ 🍕 🍤 🌮 ✨</div>
+    <div style="font-size: 2.5rem; margin-bottom: 12px;">🛫 🍕 🍤 🌮 🍷</div>
     <div class="hero-title">GOURMET WORLD</div>
-    <div class="hero-subtitle">전 세계 20개국 미식 여행 · 사진으로 즐기는 정통 음식 & 명품 맛집 가이드</div>
+    <div class="hero-sub">전 세계 20개국 미식 여행 매거진 · 세계 요리 & 대표 명소 가이드</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -267,26 +278,26 @@ st.markdown("""
 col_sidebar, col_main = st.columns([1, 2.3], gap="large")
 
 with col_sidebar:
-    st.markdown('<div class="sidebar-box">', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-card">', unsafe_allow_html=True)
     st.markdown("### 🗺️ 여행지 선택 (20개국)")
     
     selected_country = st.selectbox(
-        "📌 국가를 선택하세요",
+        "📌 목적지를 선택하세요",
         options=list(DATABASE.keys()),
         index=0
     )
     
     st.markdown("---")
-    custom_search = st.text_input("🔍 직접 검색 (한글/국가명)", placeholder="예: 스페인, 브라질...")
+    custom_search = st.text_input("🔍 국가 직접 검색", placeholder="예: 스페인, 브라질...")
     
     target = custom_search.strip() if custom_search.strip() else selected_country
     
     st.markdown("---")
-    st.markdown("#### 🎨 대륙별 분포")
+    st.markdown("#### 🎨 대륙별 한눈에 보기")
     st.markdown("""
-    - 🌏 **아시아:** 한국, 일본, 중국, 태국, 베트남, 대만, 홍콩, 싱가포르, 인도
-    - 🌍 **유럽/중동:** 이탈리아, 프랑스, 스페인, 독일, 영국, 스위스, 터키
-    - 🌎 **아메리카:** 미국, 멕시코, 브라질, 페루
+    * **🌏 아시아:** 한국, 일본, 중국, 태국, 베트남, 대만, 홍콩, 싱가포르, 인도
+    * **🌍 유럽:** 이탈리아, 프랑스, 스페인, 독일, 영국, 스위스, 터키
+    * **🌎 아메리카:** 미국, 멕시코, 브라질, 페루
     """)
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -298,27 +309,27 @@ with col_main:
         cont = item['continent']
         continent_class = "tag-asia" if "아시아" in cont else "tag-europe" if "유럽" in cont else "tag-america" if "아메리카" in cont else "tag-other"
         
-        # 타이틀 & 스티커 태그 묶음
+        # 타이틀 & 스티커 태그
         st.markdown(f"# {item['flag']} {target}")
         st.markdown(f"""
         <div>
             <span class="sticker-tag {continent_class}">📍 {item['continent']}</span>
-            <span class="sticker-tag tag-highlight">{item['tag']}</span>
+            <span class="sticker-tag tag-other">{item['tag']}</span>
             <span class="sticker-tag tag-star">⭐ {item['rating']}</span>
         </div>
         """, unsafe_allow_html=True)
         
-        st.write("") # 간격
+        st.write("") 
         
-        # 📸 비주얼 포토 카드 (사진)
+        # 📸 메인 음식 이미지
         st.image(item['image'], use_container_width=True, caption=f"📸 {target} 정통 대표 요리 - {item['food']}")
         
-        # 🍱 1. 대표 음식 스티커 카드
+        # 🍱 1. 대표 음식 카드
         st.markdown(f"""
         <div class="styled-card">
             <div class="card-label">SIGNATURE DISH</div>
             <div class="card-heading">🍱 {item['food']}</div>
-            <p style="color: #475569; line-height: 1.7; margin: 0;">{item['food_desc']}</p>
+            <p style="color: #334155; line-height: 1.8; margin: 0; font-size: 1.05rem;">{item['food_desc']}</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -327,14 +338,14 @@ with col_main:
         <div class="styled-card">
             <div class="card-label">MUST-VISIT RESTAURANT</div>
             <div class="card-heading">🏠 {item['restaurant']}</div>
-            <p style="color: #475569; line-height: 1.7; margin-bottom: 12px;">{item['rest_desc']}</p>
-            <div style="background-color: #F8FAFC; padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; color: #64748B;">
+            <p style="color: #334155; line-height: 1.8; margin-bottom: 14px; font-size: 1.02rem;">{item['rest_desc']}</p>
+            <div style="background-color: #F1F5F9; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; color: #475569;">
                 📍 <b>위치:</b> {item['location']}
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # 💡 3. 여행자 팁
+        # 💡 3. 여행자 팁 (아코디언)
         with st.expander("💡 현지에서 실패 없는 꿀팁 알아보기"):
             st.info(f"👉 **{item['food']} 더 맛있게 먹는 법:**\n\n{item['tip']}")
             
@@ -343,4 +354,4 @@ with col_main:
         st.info("💡 **현재 등록된 20개 추천 국가:**\n\n" + ", ".join(DATABASE.keys()))
 
 st.markdown("---")
-st.caption("✨ Gourmet World Visual Edition (20 Countries) | Powered by Streamlit")
+st.caption("✨ Gourmet World Premium Edition | Powered by Streamlit & Custom Style")
