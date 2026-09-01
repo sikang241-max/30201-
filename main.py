@@ -9,15 +9,21 @@ st.set_page_config(
     layout="wide"
 )
 
-# 사이드바에서 API 키 입력 받기 (또는 st.secrets 활용 가능)
-st.sidebar.title("⚙️ 설정")
-api_key_input = st.sidebar.text_input(
-    "OpenAI API Key 입력",
-    type="password",
-    help="sk-... 로 시작하는 OpenAI API 키를 입력하세요. 입력하지 않을 경우 기본 데이터베이스 내의 국가만 작동합니다."
-)
+# 1. API 키 우선순위 설정 (st.secrets -> 사이드바 입력)
+api_key = st.secrets.get("OPENAI_API_KEY", "")
 
-# 기본 내장 데이터베이스 (API 키 없이도 동작 가능한 캐시 데이터)
+st.sidebar.title("⚙️ 설정")
+if not api_key:
+    api_key_input = st.sidebar.text_input(
+        "OpenAI API Key 입력",
+        type="password",
+        help="sk-... 로 시작하는 OpenAI API 키를 입력하세요."
+    )
+    api_key = api_key_input
+else:
+    st.sidebar.success("🔒 Secrets에서 API Key를 불러왔습니다.")
+
+# 기본 내장 데이터베이스
 DATABASE = {
     "한국": {
         "flag": "🇰🇷",
@@ -66,16 +72,16 @@ DATABASE = {
     }
 }
 
-
+# 2. 캐싱 적용으로 동일 국가 반복 조회 시 API 사용량 절감
+@st.cache_data(show_spinner=False)
 def fetch_country_info_from_ai(country_name: str, api_key: str):
-    """OpenAI API를 사용하여 특정 국가/지역의 대표 음식과 맛집 추천 데이터를 JSON 형태로 반환"""
     client = OpenAI(api_key=api_key)
 
     prompt = f"""
     사용자가 검색한 국가/지역: "{country_name}"
     
     위 국가(또는 지역)의 대표 음식 1개와 그 음식을 가장 잘하는 유명 맛집 1곳을 추천해주세요.
-    반드시 아래 JSON 형식으로만 정확히 응답해주세요. 불필요한 인사말이나 서론, 마크다운 코드 블록 표기(```json) 없이 Pure JSON만 출력하세요.
+    반드시 JSON 형식으로만 정확히 응답해야 합니다.
 
     {{
         "flag": "국가 국기 이모지",
@@ -91,10 +97,11 @@ def fetch_country_info_from_ai(country_name: str, api_key: str):
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
+            response_format={"type": "json_object"},  # 3. JSON 구조 강제
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert global food critic and travel guide.",
+                    "content": "You are an expert global food critic and travel guide. Always respond in valid JSON format.",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -102,17 +109,13 @@ def fetch_country_info_from_ai(country_name: str, api_key: str):
         )
 
         content = response.choices[0].message.content.strip()
-        # 혹시 마크다운 코드가 섞여 들어올 경우 제거
-        if content.startswith("```"):
-            content = content.replace("```json", "").replace("```", "").strip()
-
         data = json.loads(content)
         return data, None
     except Exception as e:
         return None, str(e)
 
 
-# 헤더 영역
+# UI 영역
 st.title("🤖 AI 세계 맛집 & 대표 음식 추천기")
 st.caption(
     "궁금한 국가나 지역을 입력하세요. 내장 데이터에 없는 국가도 OpenAI가 실시간으로 분석해 추천해 줍니다."
@@ -120,7 +123,6 @@ st.caption(
 
 st.divider()
 
-# 레이아웃 구성
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -135,7 +137,6 @@ with col1:
         placeholder="예: 멕시코, 칠레, 몽골, 아이슬란드...",
     )
 
-    # 검색 대상 결정
     if custom_input.strip():
         target_country = custom_input.strip()
     elif selected_country != "직접 입력":
@@ -147,7 +148,6 @@ with col1:
 
 with col2:
     if target_country:
-        # 1. 내장 데이터베이스에 있는 경우
         if target_country in DATABASE:
             data = DATABASE[target_country]
             st.success(f"📌 내장 데이터베이스에서 '{target_country}' 정보를 가져왔습니다.")
@@ -173,9 +173,8 @@ with col2:
 
                 st.caption(f"전체 주소: {data['location']}")
 
-        # 2. 내장 데이터베이스에 없어 OpenAI API를 사용하는 경우
         else:
-            if not api_key_input:
+            if not api_key:
                 st.warning(
                     f"⚠️ '{target_country}'은(는) 기본 데이터베이스에 없는 국가입니다."
                 )
@@ -187,7 +186,7 @@ with col2:
                     f"🤖 AI가 '{target_country}'의 대표 음식과 맛집을 분석 중입니다..."
                 ):
                     data, error = fetch_country_info_from_ai(
-                        target_country, api_key_input
+                        target_country, api_key
                     )
 
                 if error:
@@ -217,9 +216,7 @@ with col2:
                         with m1:
                             st.metric(
                                 label="📍 위치/주소",
-                                value=data.get("location", "정보 없음").split(
-                                    ","
-                                )[0],
+                                value=str(data.get("location", "정보 없음")).split(",")[0],
                             )
                         with m2:
                             st.metric(
