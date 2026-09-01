@@ -2,297 +2,249 @@ import streamlit as st
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="세계 맛집 & 대표 음식 추천기",
-    page_icon="🍽️",
+    page_title="Gourmet World - 세계 맛집 & 대표 음식 가이드",
+    page_icon="✈️",
     layout="wide"
 )
 
-# 25개국 대용량 내장 데이터베이스
+# --- 🎨 커스텀 CSS 스타일 (스티커, 카드, 감성 디자인 적용) ---
+st.markdown("""
+<style>
+    /* 메인 배경 및 폰트 감성 적용 */
+    .main {
+        background-color: #f8f9fa;
+    }
+    
+    /* 히어로 헤더 디자인 */
+    .hero-container {
+        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(255, 107, 107, 0.25);
+        margin-bottom: 2rem;
+    }
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+
+    /* 스티커 태그 스타일 */
+    .sticker-badge {
+        display: inline-block;
+        padding: 0.35em 0.8em;
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-radius: 50px;
+        margin-right: 0.4rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+    .badge-asia { background-color: #E3F2FD; color: #1565C0; }
+    .badge-europe { background-color: #F3E5F5; color: #7B1FA2; }
+    .badge-america { background-color: #E8F5E9; color: #2E7D32; }
+    .badge-other { background-color: #FFF3E0; color: #E65100; }
+    .badge-tag { background-color: #FFF9C4; color: #F57F17; }
+
+    /* 결과 카드 스타일 */
+    .content-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 1.8rem;
+        border: 1px solid #eaeaea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        margin-bottom: 1.2rem;
+    }
+    .card-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2D3748;
+        margin-bottom: 0.8rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- 📦 25개국 확장 고고도 데이터베이스 (태그 및 팁 추가) ---
 DATABASE = {
-    # --- 아시아 ---
+    # 아시아
     "한국": {
-        "flag": "🇰🇷",
-        "food": "비빔밥",
+        "flag": "🇰🇷", "continent": "아시아", "tag": "🌶️ 매콤달콤", "food": "비빔밥",
         "food_desc": "다양한 신선한 나물, 고기, 고추장을 밥과 함께 비벼 먹는 한국의 대표 건강식입니다.",
-        "restaurant": "목멱산방",
-        "rest_desc": "서울 남산 자락에 위치한 미쉐린 가이드 선정 비빔밥 전문점으로, 깔끔하고 정갈한 한상을 제공합니다.",
-        "location": "서울 중구 남산공원길 625",
-        "rating": "4.6 / 5.0"
+        "restaurant": "목멱산방", "rest_desc": "서울 남산 자락에 위치한 미쉐린 가이드 선정 비빔밥 전문점으로 정갈한 한상을 제공합니다.",
+        "location": "서울 중구 남산공원길 625", "rating": "4.6 / 5.0", "tip": "고추장 양을 취향에 맞게 조절해 비벼 드세요!"
     },
     "일본": {
-        "flag": "🇯🇵",
-        "food": "돈코츠 라멘",
+        "flag": "🇯🇵", "continent": "아시아", "tag": "🍜 진한 육수", "food": "돈코츠 라멘",
         "food_desc": "돼지 뼈를 긴 시간 푹 고아낸 진하고 고소한 국물과 쫄깃한 면발이 특징인 일식 라멘입니다.",
-        "restaurant": "이치란 (Ichiran) 본점",
-        "rest_desc": "독서실 형태의 1인 좌석으로 유명하며, 취향에 맞게 맛과 면의 익힘을 조절할 수 있습니다.",
-        "location": "후쿠오카시 하카타구 나카스 5-3-2",
-        "rating": "4.5 / 5.0"
+        "restaurant": "이치란 (Ichiran) 본점", "rest_desc": "독서실 형태의 1인 좌석으로 유명하며, 면 익힘 정도와 국물 농도를 조절할 수 있습니다.",
+        "location": "후쿠오카시 하카타구 나카스 5-3-2", "rating": "4.5 / 5.0", "tip": "비밀 소스를 1.5배 추가하면 한국인 입맛에 딱 맞습니다."
     },
     "중국": {
-        "flag": "🇨🇳",
-        "food": "베이징 덕 (북경오리)",
+        "flag": "🇨🇳", "continent": "아시아", "tag": "🍗 바삭촉촉", "food": "베이징 덕 (북경오리)",
         "food_desc": "특제 소스를 바르고 참나무 장작에 구워 바삭한 껍질과 부드러운 살코기를 밀전병에 싸 먹는 요리입니다.",
-        "restaurant": "전취덕 (Quanjude)",
-        "rest_desc": "1864년에 설립된 160년 전통의 대표적인 전통 북경오리 전문점입니다.",
-        "location": "베이징시 둥청구 치엔먼 다지에 30",
-        "rating": "4.4 / 5.0"
+        "restaurant": "전취덕 (Quanjude)", "rest_desc": "1864년에 설립된 160년 전통의 대표적인 전통 북경오리 전문점입니다.",
+        "location": "베이징시 둥청구 치엔먼 다지에 30", "rating": "4.4 / 5.0", "tip": "설탕에 바삭한 오리 껍질을 살짝 찍어 드셔보세요."
     },
     "태국": {
-        "flag": "🇹🇭",
-        "food": "팟타이 (Pad Thai)",
-        "food_desc": "쌀국수에 계란, 숙주, 새우, 타마린드 소스를 넣어 달콤하고 새콤하게 볶아낸 국수 요리입니다.",
-        "restaurant": "팁싸마이 (Thipsamai)",
-        "rest_desc": "방콕에서 가장 유명한 팟타이 전문점으로, 얇은 계란지단으로 감싼 팟타이가 시그니처입니다.",
-        "location": "방콕 프라나콘 마하차이 로드 313",
-        "rating": "4.3 / 5.0"
+        "flag": "🇹🇭", "continent": "아시아", "tag": "🍤 새콤달콤", "food": "팟타이 (Pad Thai)",
+        "food_desc": "쌀국수에 계란, 숙주, 새우, 타마린드 소스를 넣어 달콤하고 새콤하게 볶아낸 대표 국수 요리입니다.",
+        "restaurant": "팁싸마이 (Thipsamai)", "rest_desc": "방콕에서 가장 유명한 팟타이 전문점으로 얇은 계란지단으로 감싼 팟타이가 시그니처입니다.",
+        "location": "방콕 프라나콘 마하차이 로드 313", "rating": "4.3 / 5.0", "tip": "함께 파는 생오렌지 주스를 꼭 같이 주문하세요!"
     },
     "베트남": {
-        "flag": "🇻🇳",
-        "food": "소고기 쌀국수 (Pho Bo)",
+        "flag": "🇻🇳", "continent": "아시아", "tag": "🌿 깊은 국물", "food": "소고기 쌀국수 (Pho Bo)",
         "food_desc": "진하게 우려낸 소고기 육수에 쌀국수와 신선한 허브, 양지머리를 올려 먹는 베트남 국민 요리입니다.",
-        "restaurant": "퍼10 리꾸옥수 (Pho 10 Ly Quoc Su)",
-        "rest_desc": "하노이 3대 쌀국수집 중 하나로 깊은 육수 맛과 미쉐린 빕구르망에 선정된 검증된 맛집입니다.",
-        "location": "하노이 환끼엠 리꾸옥수 10",
-        "rating": "4.4 / 5.0"
-    },
-    "인도": {
-        "flag": "🇮🇳",
-        "food": "버터 치킨 & 난 (Butter Chicken)",
-        "food_desc": "부드러운 닭고기를 향신료, 토마토, 버터, 크림으로 만든 달콤하고 고소한 커리에 난을 곁들여 먹습니다.",
-        "restaurant": "Moti Mahal",
-        "rest_desc": "버터 치킨과 탄두리 치킨이 최초로 시작된 델리의 전설적인 역사적 레스토랑입니다.",
-        "location": "뉴델리 다리야간지 3704",
-        "rating": "4.5 / 5.0"
+        "restaurant": "퍼10 리꾸옥수 (Pho 10 Ly Quoc Su)", "rest_desc": "하노이 3대 쌀국수집 중 하나로 깊은 육수 맛과 미쉐린 빕구르망에 선정된 맛집입니다.",
+        "location": "하노이 환끼엠 리꾸옥수 10", "rating": "4.4 / 5.0", "tip": "꿔이(튀긴 빵)를 국물에 적셔 함께 드세요."
     },
     "대만": {
-        "flag": "🇹🇼",
-        "food": "우육면 (Beef Noodle Soup)",
+        "flag": "🇹🇼", "continent": "아시아", "tag": "🥩 쫄깃한 고기", "food": "우육면 (Beef Noodle)",
         "food_desc": "진하게 우려낸 한약재와 소고기 육수에 쫄깃한 면발, 부드러운 아롱사태를 얹어 먹는 대표 면 요리입니다.",
-        "restaurant": "임동방 우육면 (Lin Dong Fang)",
-        "rest_desc": "타이베이에서 오랜 시간 사랑받은 미쉐린 빕구르망 추천 우육면 명가입니다.",
-        "location": "타이베이시 중산구 바더로 2단 325",
-        "rating": "4.5 / 5.0"
+        "restaurant": "임동방 우육면", "rest_desc": "타이베이에서 오랜 시간 사랑받은 미쉐린 빕구르망 추천 우육면 명가입니다.",
+        "location": "타이베이시 중산구 바더로 2단 325", "rating": "4.5 / 5.0", "tip": "테이블에 놓인 특제 버터 소스를 조금 넣으면 풍미가 살아납니다."
     },
     "홍콩": {
-        "flag": "🇭🇰",
-        "food": "딤섬 (Dim Sum - 하가우/쇼마이)",
-        "food_desc": "증기에 찌거나 기름에 튀겨 만든 한 입 크기의 만두 요리로 차와 함께 즐깁니다.",
-        "restaurant": "팀호완 (Tim Ho Wan)",
-        "rest_desc": "세계에서 가장 저렴한 미쉐린 1스타 딤섬집으로 유명한 곳입니다.",
-        "location": "홍콩 삼수이포 후쿠윙 스트리트 9-11",
-        "rating": "4.6 / 5.0"
+        "flag": "🇭🇰", "continent": "아시아", "tag": "🥟 한입의 행복", "food": "딤섬 (Dim Sum)",
+        "food_desc": "증기에 찌거나 기름에 튀겨 만든 한 입 크기의 만두 요리로 따뜻한 차와 함께 즐깁니다.",
+        "restaurant": "팀호완 (Tim Ho Wan)", "rest_desc": "세계에서 가장 가성비 좋은 미쉐린 1스타 딤섬집으로 유명한 곳입니다.",
+        "location": "홍콩 삼수이포 후쿠윙 스트리트 9-11", "rating": "4.6 / 5.0", "tip": "차슈바오(BBQ 번)는 무조건 인당 1개 이상 주문하세요."
     },
     "싱가포르": {
-        "flag": "🇸🇬",
-        "food": "칠리 크랩 (Chili Crab)",
-        "food_desc": "매콤하고 달콤한 토마토 계란 소스에 신선한 게를 볶아 만든 싱가포르의 대표 해산물 요리입니다.",
-        "restaurant": "점보 씨푸드 (Jumbo Seafood)",
-        "rest_desc": "클락키 리버사이드에 위치해 야경을 보며 정통 칠리크랩을 맛볼 수 있는 대표 맛집입니다.",
-        "location": "싱가포르 업퍼 호성 로드 20",
-        "rating": "4.5 / 5.0"
-    },
-    "인도네시아": {
-        "flag": "🇮🇩",
-        "food": "나시고랭 (Nasi Goreng)",
-        "food_desc": "삼발 소스와 낟알이 살아있는 밥, 채소, 고기를 넣고 볶아 달걀후라이를 올린 볶음밥입니다.",
-        "restaurant": "Nasi Goreng Kambing Kebon Sirih",
-        "rest_desc": "자카르타에서 양고기 나시고랭으로 매우 유명한 스트리트 푸드 명가입니다.",
-        "location": "자카르타 중구 케본시리 로드 3",
-        "rating": "4.6 / 5.0"
+        "flag": "🇸🇬", "continent": "아시아", "tag": "🦀 중독성 소스", "food": "칠리 크랩 (Chili Crab)",
+        "food_desc": "매콤달콤한 토마토 계란 소스에 신선한 게를 볶아 만든 싱가포르의 대표 해산물 요리입니다.",
+        "restaurant": "점보 씨푸드 (Jumbo Seafood)", "rest_desc": "클락키 리버사이드에 위치해 강변 야경을 보며 식사할 수 있는 대표 맛집입니다.",
+        "location": "싱가포르 업퍼 호성 로드 20", "rating": "4.5 / 5.0", "tip": "튀긴 만두(번)를 추가해 소스에 찍어 먹는 것이 핵심입니다."
     },
 
-    # --- 유럽 ---
+    # 유럽
     "이탈리아": {
-        "flag": "🇮🇹",
-        "food": "나폴리 화덕 피자 (Margherita)",
+        "flag": "🇮🇹", "continent": "유럽", "tag": "🍕 정통 화덕", "food": "나폴리 화덕 피자",
         "food_desc": "신선한 토마토소스, 모짜렐라 치즈, 바질만으로 본연의 맛을 내는 참나무 화덕 피자입니다.",
-        "restaurant": "L'Antica Pizzeria da Michele",
-        "rest_desc": "1870년부터 전통을 이어온 나폴리의 전설적인 피자집으로 영화에도 출연했습니다.",
-        "location": "Via Cesare Sersale, 1, Naples, Italy",
-        "rating": "4.7 / 5.0"
+        "restaurant": "L'Antica Pizzeria da Michele", "rest_desc": "1870년부터 전통을 이어온 나폴리의 전설적인 피자집으로 영화에도 등장했습니다.",
+        "location": "Via Cesare Sersale, 1, Naples, Italy", "rating": "4.7 / 5.0", "tip": "마르게리타와 마리나라 두 가지만 판매하는 곳입니다."
     },
     "프랑스": {
-        "flag": "🇫🇷",
-        "food": "뵈프 부르기뇽 (Bœuf Bourguignon)",
-        "food_desc": "소고기를 레드 와인, 버섯, 양파와 함께 진하게 조려낸 프랑스 정통 스튜입니다.",
-        "restaurant": "Au Petit Riche",
-        "rest_desc": "1854년에 개업한 파리의 정통 비스트로로 클래식한 프랑스 요리를 선사합니다.",
-        "location": "25 Rue Le Peletier, Paris, France",
-        "rating": "4.4 / 5.0"
+        "flag": "🇫🇷", "continent": "유럽", "tag": "🍷 와인 스튜", "food": "뵈프 부르기뇽",
+        "food_desc": "소고기를 레드 와인, 버섯, 양파와 함께 오랜 시간 진하게 조려낸 정통 와인 스튜입니다.",
+        "restaurant": "Au Petit Riche", "rest_desc": "1854년에 개업한 파리의 정통 비스트로로 클래식한 프랑스 요리를 선사합니다.",
+        "location": "25 Rue Le Peletier, Paris, France", "rating": "4.4 / 5.0", "tip": "프랑스빵(바게트)에 스튜 소스를 남김없이 찍어 드세요."
     },
     "스페인": {
-        "flag": "🇪🇸",
-        "food": "해산물 빠에야 (Paella)",
-        "food_desc": "샤프란 향이 배어있는 밥에 올리브유와 다양한 해산물을 넣어 팬에 볶아낸 요리입니다.",
-        "restaurant": "7 Portes",
-        "rest_desc": "1836년 바르셀로나에 문을 연 역사적인 레스토랑으로 피카소도 즐겨 찾던 곳입니다.",
-        "location": "Passeig de Isabel II, 14, Barcelona, Spain",
-        "rating": "4.5 / 5.0"
+        "flag": "🇪🇸", "continent": "유럽", "tag": "🥘 향긋한 샤프란", "food": "해산물 빠에야",
+        "food_desc": "샤프란 향이 배어있는 밥에 올리브유와 신선한 해산물을 넣어 넓은 팬에 볶아낸 요리입니다.",
+        "restaurant": "7 Portes", "rest_desc": "1836년 바르셀로나에 문을 연 역사적인 레스토랑으로 피카소도 즐겨 찾던 곳입니다.",
+        "location": "Passeig de Isabel II, 14, Barcelona, Spain", "rating": "4.5 / 5.0", "tip": "팬 바닥에 눌러붙은 밥(소카랏)이 가장 맛있습니다."
     },
     "독일": {
-        "flag": "🇩🇪",
-        "food": "학세 (Schweinshaxe)",
+        "flag": "🇩🇪", "continent": "유럽", "tag": "🍺 맥주 절친", "food": "학세 (Schweinshaxe)",
         "food_desc": "돼지 족발 부위를 맥주와 향신료로 오랫동안 조린 뒤 겉은 바삭하고 속은 촉촉하게 구워낸 요리입니다.",
-        "restaurant": "Hofbräuhaus München",
-        "rest_desc": "뮌헨에 위치한 400년 역사의 세계에서 가장 유명한 왕립 맥주집입니다.",
-        "location": "Platzl 9, 80331 München, Germany",
-        "rating": "4.5 / 5.0"
+        "restaurant": "Hofbräuhaus München", "rest_desc": "뮌헨에 위치한 400년 역사의 세계에서 가장 유명한 왕립 맥주집입니다.",
+        "location": "Platzl 9, 80331 München, Germany", "rating": "4.5 / 5.0", "tip": "시원한 라거 맥주 1L 마스와 함께 즐기세요!"
     },
     "영국": {
-        "flag": "🇬🇧",
-        "food": "피시 앤 칩스 (Fish and Chips)",
-        "food_desc": "두툼한 흰살생선을 바삭하게 튀겨 튀긴 감자칩과 타르타르 소스를 곁들여 먹는 대표 요리입니다.",
-        "restaurant": "The Golden Hind",
-        "rest_desc": "런던 마릴러본에서 1914년부터 운영되어 온 신선한 정통 피시앤칩스 전문점입니다.",
-        "location": "73 Marylebone High St, London, UK",
-        "rating": "4.5 / 5.0"
-    },
-    "터키": {
-        "flag": "🇹🇷",
-        "food": "이스켄데르 케밥 (Iskender Kebap)",
-        "food_desc": "얇게 썬 양고기 케밥 위에 매콤한 토마토소스, 녹인 버터, 요거트를 얹어 먹는 정통 케밥입니다.",
-        "restaurant": "Kebapçı İskender",
-        "rest_desc": "이누뇌 광장에 위치해 정통 창시자 가문의 손맛을 그대로 유지하는 케밥 명가입니다.",
-        "location": "Atatürk Cd. No:60, Bursa, Turkey",
-        "rating": "4.6 / 5.0"
-    },
-    "스위스": {
-        "flag": "🇨🇭",
-        "food": "치즈 퐁듀 (Cheese Fondue)",
-        "food_desc": "그뤼에르 치즈와 와인을 녹인 냄비에 빵 조각을 꼬챙이에 꿰어 찍어 먹는 따뜻한 요리입니다.",
-        "restaurant": "Swiss Chuchi Restaurant",
-        "rest_desc": "취리히 구시가지에 위치하여 최고의 정통 치즈 퐁듀를 제공하는 인기 맛집입니다.",
-        "location": "Rosengasse 10, 8001 Zürich, Switzerland",
-        "rating": "4.4 / 5.0"
-    },
-    "애일랜드": {
-        "flag": "🇬🇷",
-        "food": "수블라키 & 기로스 (Souvlaki)",
-        "food_desc": "향신료로 재운 돼지고기나 닭고기를 꼬치에 구워 피타 빵과 차지키 소스에 싸 먹는 요리입니다.",
-        "restaurant": "O Thanasis",
-        "rest_desc": "아테네 모나스티라키 광장 근처에서 가장 유명한 수블라키 전문점입니다.",
-        "location": "Mitropoleos 69, Monastiraki, Athens, Greece",
-        "rating": "4.5 / 5.0"
+        "flag": "🇬🇧", "continent": "유럽", "tag": "🐟 바삭 바삭", "food": "피시 앤 칩스",
+        "food_desc": "두툼한 흰살생선을 바삭하게 튀겨 튀긴 감자칩과 타르타르 소스를 곁들여 먹는 요리입니다.",
+        "restaurant": "The Golden Hind", "rest_desc": "런던 마릴러본에서 1914년부터 운영되어 온 정통 피시앤칩스 전문점입니다.",
+        "location": "73 Marylebone High St, London, UK", "rating": "4.5 / 5.0", "tip": "식초(Malt Vinegar)를 살짝 뿌려 먹으면 느끼함이 사라집니다."
     },
 
-    # --- 아메리카 ---
+    # 아메리카
     "미국": {
-        "flag": "🇺🇸",
-        "food": "수제 바비큐 립 (BBQ Ribs)",
+        "flag": "🇺🇸", "continent": "아메리카", "tag": "🍖 스모키 훈연", "food": "수제 바비큐 립",
         "food_desc": "훈연 칩으로 오랜 시간 천천히 구워내 부드럽고 스모키한 풍미가 진하게 배어있는 바비큐입니다.",
-        "restaurant": "Joe's Kansas City Bar-B-Que",
-        "rest_desc": "주유소를 개조해 만든 캔자스시티의 명물로 세계적으로 유명한 바비큐 맛집입니다.",
-        "location": "3002 W 47th Ave, Kansas City, KS, USA",
-        "rating": "4.8 / 5.0"
+        "restaurant": "Joe's Kansas City Bar-B-Que", "rest_desc": "주유소를 개조해 만든 캔자스시티의 명물로 세계적으로 유명한 맛집입니다.",
+        "location": "3002 W 47th Ave, Kansas City, KS, USA", "rating": "4.8 / 5.0", "tip": "Z-Man 샌드위치가 대기열을 감수할 만큼 유명합니다."
     },
     "멕시코": {
-        "flag": "🇲🇽",
-        "food": "스트리트 타코 (Tacos al Pastor)",
+        "flag": "🇲🇽", "continent": "아메리카", "tag": "🌮 정통 스트리트", "food": "스트리트 타코 (Al Pastor)",
         "food_desc": "양념된 돼지고기를 회전 구이틀에서 익혀 또르띠아에 파인애플, 고수, 라임과 함께 싸 먹습니다.",
-        "restaurant": "El Farolito",
-        "rest_desc": "멕시코시티 현지인들이 최고의 알 파스토르 타코로 손꼽는 숨은 맛집입니다.",
-        "location": "Altata 19, Hipódromo Condesa, Mexico City, Mexico",
-        "rating": "4.6 / 5.0"
-    },
-    "브라질": {
-        "flag": "🇧🇷",
-        "food": "슈하스코 (Churrasco)",
-        "food_desc": "소고기, 돼지고기, 닭고기 등 다양한 부위를 꼬챙이에 꿰어 숯불에 구워내는 정통 바비큐입니다.",
-        "restaurant": "Fogo de Chão",
-        "rest_desc": "상파울루에서 시작되어 세계적인 브랜드가 된 고급 슈하스코 전문점입니다.",
-        "location": "R. Augusta, 2077 - Cerqueira César, São Paulo, Brazil",
-        "rating": "4.7 / 5.0"
-    },
-    "캐나다": {
-        "flag": "🇨🇦",
-        "food": "푸틴 (Poutine)",
-        "food_desc": "바삭하게 튀긴 감자튀김 위에 쫄깃한 치즈 커드를 올리고 따뜻한 그레이비 소스를 부어 먹습니다.",
-        "restaurant": "La Banquise",
-        "rest_desc": "몬트리올에서 24시간 운영하며 30가지가 넘는 다양한 푸틴을 맛볼 수 있는 곳입니다.",
-        "location": "994 Rue Rachel E, Montréal, QC, Canada",
-        "rating": "4.5 / 5.0"
-    },
-
-    # --- 오세아니아 & 아프리카 ---
-    "호주": {
-        "flag": "🇦🇺",
-        "food": "미트 파이 & 미디엄 스테이크",
-        "food_desc": "다진 고기와 그레이비 소스로 채워 바삭하게 구워낸 파이와 신선한 청정우 스테이크입니다.",
-        "restaurant": "Harry's Cafe de Wheels",
-        "rest_desc": "시드니울루물루 해안가에 위치한 80년 전통의 전설적인 파이 수레 맛집입니다.",
-        "location": "56 Cowper Wharf Roadway, Woolloomooloo NSW, Australia",
-        "rating": "4.4 / 5.0"
-    },
-    "이집트": {
-        "flag": "🇪🇬",
-        "food": "쿠샤리 (Koshary)",
-        "food_desc": "쌀, 마카로니, 렌틸콩, 병아리콩을 섞은 후 튀긴 양파와 매콤한 토마토소스를 올려 먹는 국민 요리입니다.",
-        "restaurant": "Koshary Abou Tarek",
-        "rest_desc": "카이로 중심가에 위치한 3층 규모의 쿠샤리 전용 대형 전문점입니다.",
-        "location": "Champollion Rd, Marouf, Qasr El Nil, Cairo, Egypt",
-        "rating": "4.6 / 5.0"
-    },
-    "모로코": {
-        "flag": "🇲🇦",
-        "food": "양고기 타진 (Tajine)",
-        "food_desc": "원뿔 모양의 도자기 냄비에 양고기, 채소, 향신료, 말린 과일을 넣어 오랫동안 찌는 요리입니다.",
-        "restaurant": "Le Jardin",
-        "rest_desc": "마라케시 메디나 전통 정원 내에 위치하여 매력적인 분위기 속에서 타진을 즐길 수 있습니다.",
-        "location": "32 Souk El Jdid, Marrakech, Morocco",
-        "rating": "4.5 / 5.0"
+        "restaurant": "El Farolito", "rest_desc": "멕시코시티 현지인들이 최고의 타코로 손꼽는 찐 맛집입니다.",
+        "location": "Altata 19, Mexico City, Mexico", "rating": "4.6 / 5.0", "tip": "라임즙을 듬뿍 짜 넣고 살사 소스를 취향껏 올려 드세요."
     }
 }
 
-# --- UI 레이아웃 ---
-st.title("🌏 세계 맛집 & 대표 음식 추천기")
-st.caption("궁금한 국가 이름을 선택하거나 직접 입력해 보세요! 전 세계 25개국 핵심 맛집 정보를 제공합니다.")
+# --- 🎈 상단 감성 히어로 배너 ---
+st.markdown("""
+<div class="hero-container">
+    <div style="font-size: 3rem; margin-bottom: 5px;">✈️ 🍽️ 📍</div>
+    <div class="hero-title">GOURMET WORLD</div>
+    <div class="hero-subtitle">손끝에서 떠나는 전 세계 미식 여행 - 미쉐린 맛집 & 대표 음식 가이드</div>
+</div>
+""", unsafe_allow_html=True)
 
-st.divider()
+# --- 🔍 메인 검색 레이아웃 ---
+col_search, col_display = st.columns([1, 2], gap="large")
 
-col1, col2 = st.columns([1, 2])
-
-with col1:
-    st.subheader("🔍 국가 검색")
+with col_search:
+    st.markdown("### 🧭 어디로 떠나볼까요?")
     
-    # 드롭다운
+    # 카테고리 필터 스티커
     selected_country = st.selectbox(
-        "목록에서 국가 선택",
+        "📌 추천 국가 선택하기",
         options=list(DATABASE.keys())
     )
     
-    # 직접 입력
-    custom_input = st.text_input("또는 국가 이름 직접 입력", placeholder="예: 한국, 프랑스, 멕시코...")
+    custom_input = st.text_input("🔍 직접 국가 검색", placeholder="예: 한국, 일본, 이탈리아...")
     
-    # 최종 타깃
-    target_country = custom_input.strip() if custom_input.strip() else selected_country
+    target = custom_input.strip() if custom_input.strip() else selected_country
+    
+    st.markdown("---")
+    st.markdown("#### 🌟 빠른 미식 태그")
+    st.markdown("""
+    - 🌶️ **매콤달콤한 맛**: 한국, 태국
+    - 🍕 **화덕 & 피자**: 이탈리아
+    - 🥩 **고기 파티**: 미국, 독일, 멕시코
+    - 🍜 **면 요리 탐방**: 일본, 베트남, 대만
+    """)
 
-with col2:
-    if target_country in DATABASE:
-        data = DATABASE[target_country]
+with col_display:
+    if target in DATABASE:
+        data = DATABASE[target]
         
-        st.subheader(f"{data['flag']} {target_country} 추천 정보")
+        # 대륙별 스티커 색상 자동 할당
+        cont_class = "badge-asia" if data['continent'] == "아시아" else "badge-europe" if data['continent'] == "유럽" else "badge-america"
         
-        # 음식 카드
-        with st.container(border=True):
-            st.markdown(f"### 🍱 대표 음식: **{data['food']}**")
-            st.write(data['food_desc'])
-            
-        # 맛집 카드
-        with st.container(border=True):
-            st.markdown(f"### 🏠 추천 맛집: **{data['restaurant']}**")
-            st.write(data['rest_desc'])
-            
-            m1, m2 = st.columns(2)
-            with m1:
-                st.metric(label="📍 위치 / 주요 도시", value=data['location'].split(',')[0])
-            with m2:
-                st.metric(label="⭐ 평점", value=data['rating'])
-                
-            st.caption(f"상세 주소: {data['location']}")
+        # 헤더 타이틀 및 스티커 배지
+        st.markdown(f"## {data['flag']} {target}")
+        st.markdown(f"""
+        <span class="sticker-badge {cont_class}">📍 {data['continent']}</span>
+        <span class="sticker-badge badge-tag">{data['tag']}</span>
+        <span class="sticker-badge badge-other">⭐ {data['rating']}</span>
+        """, unsafe_allow_html=True)
+        
+        st.write("") # 간격 조정
+        
+        # 대표 음식 카드
+        st.markdown(f"""
+        <div class="content-card">
+            <div class="card-title">🍱 대표 음식: {data['food']}</div>
+            <p style="color: #4A5568; line-height: 1.6;">{data['food_desc']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 추천 맛집 카드
+        st.markdown(f"""
+        <div class="content-card">
+            <div class="card-title">🏠 대표 맛집: {data['restaurant']}</div>
+            <p style="color: #4A5568; line-height: 1.6;">{data['rest_desc']}</p>
+            <hr style="border: none; border-top: 1px solid #edf2f7; margin: 10px 0;">
+            <p style="font-size: 0.9rem; color: #718096; margin: 0;">📍 <b>위치:</b> {data['location']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 💡 여행자 꿀팁 세션 (Accordion)
+        with st.expander("💡 현지인처럼 즐기는 미식 꿀팁 보기"):
+            st.info(data['tip'])
             
     else:
-        st.warning(f"⚠️ '{target_country}'에 대한 정보가 준비되지 않았습니다.")
-        st.info("💡 지원하는 국가 목록:\n\n" + ", ".join(DATABASE.keys()))
+        st.warning(f"⚠️ '{target}'에 대한 정보가 아직 등록되지 않았습니다.")
+        st.info("💡 **등록된 국가 목록:**\n\n" + ", ".join(DATABASE.keys()))
 
-st.divider()
-st.caption("💡 외부 라이브러리 없이 Streamlit 표준 기능만으로 작동하므로 Streamlit Cloud에 오류 없이 바로 배포할 수 있습니다.")
+st.markdown("---")
+st.caption("✨ Gourmet World Guide | Crafted with Streamlit")
