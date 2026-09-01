@@ -1,13 +1,23 @@
+import json
 import streamlit as st
+from openai import OpenAI
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="세계 맛집 & 대표 음식 추천기",
+    page_title="AI 세계 맛집 & 대표 음식 추천기",
     page_icon="🍽️",
     layout="wide"
 )
 
-# 국가별 추천 데이터베이스
+# 사이드바에서 API 키 입력 받기 (또는 st.secrets 활용 가능)
+st.sidebar.title("⚙️ 설정")
+api_key_input = st.sidebar.text_input(
+    "OpenAI API Key 입력",
+    type="password",
+    help="sk-... 로 시작하는 OpenAI API 키를 입력하세요. 입력하지 않을 경우 기본 데이터베이스 내의 국가만 작동합니다."
+)
+
+# 기본 내장 데이터베이스 (API 키 없이도 동작 가능한 캐시 데이터)
 DATABASE = {
     "한국": {
         "flag": "🇰🇷",
@@ -53,88 +63,178 @@ DATABASE = {
         "rest_desc": "방콕에서 가장 유명한 팟타이 전문점으로, 얇은 계란지단으로 감싼 오렌지 에그 팟타이가 시그니처입니다.",
         "location": "313 315 Maha Chai Rd, Samran Rat, Phra Nakhon, Bangkok 10200",
         "rating": "4.3 / 5.0"
-    },
-    "미국": {
-        "flag": "🇺🇸",
-        "food": "수제 스모크 바비큐 립",
-        "food_desc": "훈연 칩으로 오랜 시간 천천히 구워내 부드럽고 스모키한 풍미가 진하게 배어있는 바비큐입니다.",
-        "restaurant": "Joe's Kansas City Bar-B-Que",
-        "rest_desc": "주유소를 개조해 만든 캔자스시티의 명물로, 세계적으로 손꼽히는 바비큐 맛집입니다.",
-        "location": "3002 W 47th Ave, Kansas City, KS 66103",
-        "rating": "4.8 / 5.0"
-    },
-    "베트남": {
-        "flag": "🇻🇳",
-        "food": "소고기 쌀국수 (Pho Bo)",
-        "food_desc": "진하게 우려낸 소고기 육수에 쌀국수와 신선한 허브, 양지머리를 올려 먹는 베트남의 국민 요리입니다.",
-        "restaurant": "퍼10 리꾸옥수 (Pho 10 Ly Quoc Su)",
-        "rest_desc": "하노이 3대 쌀국수집 중 하나로, 깊은 육수 맛과 미쉐린 빕구르망에 선정된 검증된 맛집입니다.",
-        "location": "10 P. Lý Quốc Sư, Hàng Trống, Hoàn Kiếm, Hà Nội",
-        "rating": "4.4 / 5.0"
-    },
-    "스페인": {
-        "flag": "🇪🇸",
-        "food": "해산물 빠에야 (Paella)",
-        "food_desc": "샤프란 향이 배어있는 밥에 신선한 올리브유, 새우, 홍합 등 해산물을 넣어 팬에 볶아낸 요리입니다.",
-        "restaurant": "7 Portes",
-        "rest_desc": "1836년 바르셀로나에 문을 연 역사적인 레스토랑으로, 피카소와 미로도 즐겨 찾았던 빠에야 명가입니다.",
-        "location": "Passeig de Isabel II, 14, 08003 Barcelona, Spain",
-        "rating": "4.5 / 5.0"
     }
 }
 
+
+def fetch_country_info_from_ai(country_name: str, api_key: str):
+    """OpenAI API를 사용하여 특정 국가/지역의 대표 음식과 맛집 추천 데이터를 JSON 형태로 반환"""
+    client = OpenAI(api_key=api_key)
+
+    prompt = f"""
+    사용자가 검색한 국가/지역: "{country_name}"
+    
+    위 국가(또는 지역)의 대표 음식 1개와 그 음식을 가장 잘하는 유명 맛집 1곳을 추천해주세요.
+    반드시 아래 JSON 형식으로만 정확히 응답해주세요. 불필요한 인사말이나 서론, 마크다운 코드 블록 표기(```json) 없이 Pure JSON만 출력하세요.
+
+    {{
+        "flag": "국가 국기 이모지",
+        "food": "대표 음식 이름",
+        "food_desc": "대표 음식에 대한 설명 (2~3문장)",
+        "restaurant": "추천 맛집 이름",
+        "rest_desc": "추천 맛집에 대한 설명 및 특징 (2~3문장)",
+        "location": "맛집의 실제 도시 및 주소",
+        "rating": "평점 (예: 4.6 / 5.0)"
+    }}
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert global food critic and travel guide.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+        )
+
+        content = response.choices[0].message.content.strip()
+        # 혹시 마크다운 코드가 섞여 들어올 경우 제거
+        if content.startswith("```"):
+            content = content.replace("```json", "").replace("```", "").strip()
+
+        data = json.loads(content)
+        return data, None
+    except Exception as e:
+        return None, str(e)
+
+
 # 헤더 영역
-st.title("🌏 세계 맛집 & 대표 음식 추천기")
-st.caption("궁금한 나라의 이름을 입력하거나 선택하시면 대표 음식과 명품 맛집을 찾아드립니다.")
+st.title("🤖 AI 세계 맛집 & 대표 음식 추천기")
+st.caption(
+    "궁금한 국가나 지역을 입력하세요. 내장 데이터에 없는 국가도 OpenAI가 실시간으로 분석해 추천해 줍니다."
+)
 
 st.divider()
 
-# 검색 영역 (사이드바 또는 메인 화면)
+# 레이아웃 구성
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.subheader("🔍 국가 검색")
-    
-    # 드롭다운 선택 또는 직접 입력
+    st.subheader("🔍 국가 / 지역 검색")
+
     selected_country = st.selectbox(
-        "목록에서 선택하기",
-        options=list(DATABASE.keys())
+        "기존 등록 국가 선택", options=["직접 입력"] + list(DATABASE.keys())
     )
-    
-    custom_input = st.text_input("또는 직접 입력하기", placeholder="예: 한국, 일본, 태국...")
-    
-    # 최종 선택 국가 결정
-    target_country = custom_input.strip() if custom_input.strip() else selected_country
+
+    custom_input = st.text_input(
+        "국가/지역 직접 입력",
+        placeholder="예: 멕시코, 칠레, 몽골, 아이슬란드...",
+    )
+
+    # 검색 대상 결정
+    if custom_input.strip():
+        target_country = custom_input.strip()
+    elif selected_country != "직접 입력":
+        target_country = selected_country
+    else:
+        target_country = ""
+
+    search_button = st.button("🚀 맛집 검색하기", use_container_width=True)
 
 with col2:
-    if target_country in DATABASE:
-        data = DATABASE[target_country]
-        
-        st.subheader(f"{data['flag']} {target_country} 추천 결과")
-        
-        # 대표 음식 카드리
-        with st.container(border=True):
-            st.markdown(f"### 🍱 대표 음식: **{data['food']}**")
-            st.write(data['food_desc'])
-            
-        # 맛집 카드
-        with st.container(border=True):
-            st.markdown(f"### 🏠 추천 맛집: **{data['restaurant']}**")
-            st.write(data['rest_desc'])
-            
-            # 메트릭 표시
-            m_col1, m_col2 = st.columns(2)
-            with m_col1:
-                st.metric(label="📍 위치/주소", value=data['location'].split(',')[0])
-            with m_col2:
-                st.metric(label="⭐ 평점", value=data['rating'])
-                
-            st.caption(f"전체 주소: {data['location']}")
-            
-    else:
-        st.warning(f"⚠️ '{target_country}'에 대한 데이터가 아직 준비되지 않았습니다.")
-        st.info("현재 지원 가능한 국가: " + ", ".join(DATABASE.keys()))
+    if target_country:
+        # 1. 내장 데이터베이스에 있는 경우
+        if target_country in DATABASE:
+            data = DATABASE[target_country]
+            st.success(f"📌 내장 데이터베이스에서 '{target_country}' 정보를 가져왔습니다.")
 
-# 하단 안내 메시지
+            st.subheader(f"{data['flag']} {target_country} 추천 결과")
+
+            with st.container(border=True):
+                st.markdown(f"### 🍱 대표 음식: **{data['food']}**")
+                st.write(data['food_desc'])
+
+            with st.container(border=True):
+                st.markdown(f"### 🏠 추천 맛집: **{data['restaurant']}**")
+                st.write(data['rest_desc'])
+
+                m1, m2 = st.columns(2)
+                with m1:
+                    st.metric(
+                        label="📍 위치/주소",
+                        value=data["location"].split(",")[0],
+                    )
+                with m2:
+                    st.metric(label="⭐ 평점", value=data["rating"])
+
+                st.caption(f"전체 주소: {data['location']}")
+
+        # 2. 내장 데이터베이스에 없어 OpenAI API를 사용하는 경우
+        else:
+            if not api_key_input:
+                st.warning(
+                    f"⚠️ '{target_country}'은(는) 기본 데이터베이스에 없는 국가입니다."
+                )
+                st.info(
+                    "👈 왼쪽 사이드바에 **OpenAI API Key**를 입력하시면 AI가 실시간으로 해당 국가의 맛집을 분석해 드립니다!"
+                )
+            else:
+                with st.spinner(
+                    f"🤖 AI가 '{target_country}'의 대표 음식과 맛집을 분석 중입니다..."
+                ):
+                    data, error = fetch_country_info_from_ai(
+                        target_country, api_key_input
+                    )
+
+                if error:
+                    st.error(f"❌ 데이터 분석 중 오류가 발생했습니다: {error}")
+                elif data:
+                    st.success(
+                        f"✨ AI가 '{target_country}'의 맞춤 정보를 실시간 생성했습니다!"
+                    )
+
+                    st.subheader(
+                        f"{data.get('flag', '🌐')} {target_country} 추천 결과"
+                    )
+
+                    with st.container(border=True):
+                        st.markdown(
+                            f"### 🍱 대표 음식: **{data.get('food', '정보 없음')}**"
+                        )
+                        st.write(data.get("food_desc", ""))
+
+                    with st.container(border=True):
+                        st.markdown(
+                            f"### 🏠 추천 맛집: **{data.get('restaurant', '정보 없음')}**"
+                        )
+                        st.write(data.get("rest_desc", ""))
+
+                        m1, m2 = st.columns(2)
+                        with m1:
+                            st.metric(
+                                label="📍 위치/주소",
+                                value=data.get("location", "정보 없음").split(
+                                    ","
+                                )[0],
+                            )
+                        with m2:
+                            st.metric(
+                                label="⭐ 평점",
+                                value=data.get("rating", "4.5 / 5.0"),
+                            )
+
+                        st.caption(
+                            f"전체 주소: {data.get('location', '정보 없음')}"
+                        )
+
+    else:
+        st.info("👈 왼쪽에 국가 이름을 입력하거나 선택한 후 검색 버튼을 눌러주세요.")
+
 st.divider()
-st.caption("💡 Streamlit으로 제작된 서비스입니다. `pip install streamlit` 후 `streamlit run app.py`로 실행할 수 있습니다.")
+st.caption(
+    "💡 설치 필요 라이브러리: `pip install streamlit openai` | 실행 방법: `streamlit run app.py`"
+)
