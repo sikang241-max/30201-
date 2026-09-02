@@ -75,7 +75,8 @@ col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
     st.subheader(f"🍽️ {selected_country} - {data['food_name']}")
-    st.image(data["image_url"], use_column_width=True)
+    # use_container_width 적용
+    st.image(data["image_url"], use_container_width=True)
     st.write(data["description"])
     st.info(data["restaurant"])
 
