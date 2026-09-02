@@ -1,5 +1,4 @@
 import streamlit as st
-from google import genai
 
 # 1. 페이지 설정
 st.set_page_config(
@@ -17,7 +16,7 @@ COUNTRIES = [
     "네덜란드", "벨기에", "이집트", "모로코", "남아프리카공화국", "호주", "뉴질랜드", "괌"
 ]
 
-# 3. LLM 프롬프트 템플릿 생성 함수
+# 3. 프롬프트 생성 함수
 def generate_prompt(country_name):
     return f"""
 당신은 전 세계 미식 문화에 정통한 글로벌 푸드 도슨트입니다.
@@ -60,25 +59,36 @@ with st.sidebar:
     
     search_btn = st.button("🍽️ 음식 정보 조회하기", use_container_width=True)
 
-# 6. 실행 처리
+# 6. API 호출 로직 (신형/구형 SDK 자동 호환 처리)
 if search_btn:
     if not api_key:
         st.warning("⚠️ 왼쪽 사이드바에 Gemini API Key를 입력해 주세요.")
     else:
-        try:
-            # 최신 SDK 클라이언트 초기화 및 호출
-            client = genai.Client(api_key=api_key)
-            prompt = generate_prompt(selected_country)
-            
-            with st.spinner(f"'{selected_country}'의 맛있는 음식 정보를 가져오는 중입니다..."):
+        prompt = generate_prompt(selected_country)
+        result_text = ""
+        
+        with st.spinner(f"'{selected_country}'의 맛있는 음식 정보를 가져오는 중입니다..."):
+            try:
+                # 1차 시도: 최신 google-genai SDK 사용
+                from google import genai
+                client = genai.Client(api_key=api_key)
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=prompt
                 )
-                
-                st.markdown(response.text)
-                
-        except Exception as e:
-            st.error(f"오류가 발생했습니다: {e}")
+                result_text = response.text
+            except Exception:
+                try:
+                    # 2차 시도: 기존 google-generativeai SDK 사용 (구버전 호환)
+                    import google.generativeai as legacy_genai
+                    legacy_genai.configure(api_key=api_key)
+                    model = legacy_genai.GenerativeModel('gemini-2.5-flash')
+                    response = model.generate_content(prompt)
+                    result_text = response.text
+                except Exception as e:
+                    st.error(f"❌ API 호출 중 오류 발생: {e}")
+            
+            if result_text:
+                st.markdown(result_text)
 else:
     st.info("👈 왼쪽 사이드바에서 API 키를 입력하고 국가를 선택한 뒤 **[음식 정보 조회하기]** 버튼을 눌러주세요.")
