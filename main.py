@@ -1,11 +1,15 @@
 import streamlit as st
 
-# 1. 페이지 설정
+# 1. 페이지 기본 설정
 st.set_page_config(
     page_title="세계 40개국 미식 여행 가이드",
     page_icon="✈️",
     layout="wide"
 )
+
+# 🔑 [필수] 구글 AI Studio에서 발급받은 API 키를 아래 따옴표 안에 넣으세요.
+# 예시: GEMINI_API_KEY = "AIzaSy..."
+GEMINI_API_KEY = "여기에_발급받은_API_KEY를_붙여넣으세요"
 
 # 2. 인기 여행지 40개국 리스트
 COUNTRIES = [
@@ -16,7 +20,7 @@ COUNTRIES = [
     "네덜란드", "벨기에", "이집트", "모로코", "남아프리카공화국", "호주", "뉴질랜드", "괌"
 ]
 
-# 3. 프롬프트 생성 함수
+# 3. LLM 프롬프트 템플릿 생성 함수
 def generate_prompt(country_name):
     return f"""
 당신은 전 세계 미식 문화에 정통한 글로벌 푸드 도슨트입니다.
@@ -44,13 +48,9 @@ st.write("원하는 여행 국가를 선택하시면 해당 국가의 대표 음
 
 st.markdown("---")
 
-# 5. 사이드바 구성
+# 5. 사이드바 구성 (국가 선택만 존재)
 with st.sidebar:
-    st.header("⚙️ 설정 및 국가 선택")
-    
-    api_key = st.text_input("Gemini API Key를 입력하세요", type="password")
-    
-    st.markdown("---")
+    st.header("⚙️ 국가 선택")
     
     selected_country = st.selectbox(
         "여행할 국가를 선택하세요 (총 40개국)",
@@ -59,19 +59,19 @@ with st.sidebar:
     
     search_btn = st.button("🍽️ 음식 정보 조회하기", use_container_width=True)
 
-# 6. API 호출 로직 (신형/구형 SDK 자동 호환 처리)
+# 6. 버튼 클릭 시 자동 조회 및 결과 출력
 if search_btn:
-    if not api_key:
-        st.warning("⚠️ 왼쪽 사이드바에 Gemini API Key를 입력해 주세요.")
+    if GEMINI_API_KEY == "여기에_발급받은_API_KEY를_붙여넣으세요" or not GEMINI_API_KEY:
+        st.error("⚠️ 코드 상단의 `GEMINI_API_KEY` 변수에 본인의 Gemini API 키를 넣어야 정상 작동합니다.")
     else:
         prompt = generate_prompt(selected_country)
         result_text = ""
         
         with st.spinner(f"'{selected_country}'의 맛있는 음식 정보를 가져오는 중입니다..."):
             try:
-                # 1차 시도: 최신 google-genai SDK 사용
+                # 최신 SDK 사용
                 from google import genai
-                client = genai.Client(api_key=api_key)
+                client = genai.Client(api_key=GEMINI_API_KEY)
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=prompt
@@ -79,16 +79,16 @@ if search_btn:
                 result_text = response.text
             except Exception:
                 try:
-                    # 2차 시도: 기존 google-generativeai SDK 사용 (구버전 호환)
+                    # 기존 SDK 호환
                     import google.generativeai as legacy_genai
-                    legacy_genai.configure(api_key=api_key)
+                    legacy_genai.configure(api_key=GEMINI_API_KEY)
                     model = legacy_genai.GenerativeModel('gemini-2.5-flash')
                     response = model.generate_content(prompt)
                     result_text = response.text
                 except Exception as e:
-                    st.error(f"❌ API 호출 중 오류 발생: {e}")
+                    st.error(f"❌ 오류 발생: {e}")
             
             if result_text:
                 st.markdown(result_text)
 else:
-    st.info("👈 왼쪽 사이드바에서 API 키를 입력하고 국가를 선택한 뒤 **[음식 정보 조회하기]** 버튼을 눌러주세요.")
+    st.info("👈 왼쪽 사이드바에서 국가를 선택한 뒤 **[음식 정보 조회하기]** 버튼을 누르세요.")
