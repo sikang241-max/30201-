@@ -1,14 +1,14 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
-# 1. 스트림릿 페이지 기본 설정
+# 1. 페이지 설정
 st.set_page_config(
     page_title="세계 40개국 미식 여행 가이드",
     page_icon="✈️",
     layout="wide"
 )
 
-# 2. 인기 여행지 40개국 리스트 정의
+# 2. 인기 여행지 40개국 리스트
 COUNTRIES = [
     "일본", "베트남", "태국", "대만", "필리핀", "싱가포르", "인도네시아", "말레이시아", 
     "홍콩", "마카오", "몽골", "라오스", "캄보디아", "인도", "미국", "캐나다", 
@@ -17,7 +17,7 @@ COUNTRIES = [
     "네덜란드", "벨기에", "이집트", "모로코", "남아프리카공화국", "호주", "뉴질랜드", "괌"
 ]
 
-# 3. LLM 호출용 프롬프트 템플릿 생성 함수
+# 3. LLM 프롬프트 템플릿 생성 함수
 def generate_prompt(country_name):
     return f"""
 당신은 전 세계 미식 문화에 정통한 글로벌 푸드 도슨트입니다.
@@ -39,22 +39,20 @@ def generate_prompt(country_name):
 - 현지에서 해당 음식을 더욱 맛있게 즐기는 방법이나 문화적 주의사항 1~2가지
 """
 
-# 4. 메인 UI 화면 구성
+# 4. 메인 UI 화면
 st.title("✈️ 세계 40개국 대표 음식 & 특징 가이드")
 st.write("원하는 여행 국가를 선택하시면 해당 국가의 대표 음식과 미식 특징을 AI가 실시간으로 안내합니다.")
 
 st.markdown("---")
 
-# 5. 사이드바 구성 (API 키 입력 및 국가 선택)
+# 5. 사이드바 구성
 with st.sidebar:
     st.header("⚙️ 설정 및 국가 선택")
     
-    # Gemini API 키 입력받기
     api_key = st.text_input("Gemini API Key를 입력하세요", type="password")
     
     st.markdown("---")
     
-    # 40개국 선택 드롭다운
     selected_country = st.selectbox(
         "여행할 국가를 선택하세요 (총 40개국)",
         COUNTRIES
@@ -62,24 +60,22 @@ with st.sidebar:
     
     search_btn = st.button("🍽️ 음식 정보 조회하기", use_container_width=True)
 
-# 6. 조회 버튼 클릭 시 결과 출력 처리
+# 6. 실행 처리
 if search_btn:
     if not api_key:
         st.warning("⚠️ 왼쪽 사이드바에 Gemini API Key를 입력해 주세요.")
     else:
         try:
-            # API 설정 및 모델 로드
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
-            # 프롬프트 생성
+            # 최신 SDK 클라이언트 초기화 및 호출
+            client = genai.Client(api_key=api_key)
             prompt = generate_prompt(selected_country)
             
-            # 정보 생성 진행 상태 표시
             with st.spinner(f"'{selected_country}'의 맛있는 음식 정보를 가져오는 중입니다..."):
-                response = model.generate_content(prompt)
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt
+                )
                 
-                # 결과 출력
                 st.markdown(response.text)
                 
         except Exception as e:
