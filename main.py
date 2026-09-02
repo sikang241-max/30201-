@@ -1,81 +1,90 @@
 import streamlit as st
-import json
 import os
 
-# 페이지 기본 설정
+# 1. 페이지 기본 설정
 st.set_page_config(
-    page_title="193개국 세계 음식 여행 가이드",
-    page_icon="🍔",
+    page_title="UN 193개국 세계 미식 가이드",
+    page_icon="🍽️",
     layout="wide"
 )
 
-# JSON 데이터 로드 함수
-@st.cache_data
-def load_food_data():
-    file_path = "countries_food.json"
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+st.title("🍽️ UN 193개국 세계 미식 가이드 프롬프트 생성기")
+st.write("원하는 국가를 선택하거나 직접 입력하여 해당 국가의 대표 음식, 특징, 유명 맛집 프롬프트를 실행하세요.")
 
-FOOD_DATA = load_food_data()
+# 2. UN 193개국 목록 데이터 (대표 국가 예시 및 193개국 확장용 리스트)
+UN_COUNTRIES = [
+    "가나", "가봉", "가이아나", "감비아", "과테말라", "그레나다", "그리스", "기니", "기니비사우", "나미비아",
+    "나우루", "나이지리아", "남수단", "남아프리카 공화국", "네덜란드", "네팔", "노르웨이", "뉴질랜드", "니제르", "니카라과",
+    "대한민국", "덴마크", "도미니카 공화국", "도미니카 연방", "독일", "동티모르", "라오스", "라이베리아", "라트비아", "러시아",
+    "레바논", "레소토", "루마니아", "룩셈부르크", "르완다", "리비아", "리투아니아", "리히텐슈타인", "마다가스카르", "마샬 군도",
+    "마케도니아", "말라위", "말레이시아", "말리", "멕시코", "모나코", "모로코", "모리셔스", "모리타니", "모잠비크",
+    "몬테네그로", "몰도바", "몰디브", "말타", "몽골", "미얀마", "미국", "미크로네시아", "바누아투", "바레인",
+    "바베이도스", "바하마", "방글라데시", "버뮤다", "베냉", "베네수엘라", "베트남", "벨기에", "벨라루스", "벨리즈",
+    "보스니아 헤르체고비나", "보츠와나", "볼리비아", "부룬디", "부키나파소", "부탄", "북마케도니아", "불가리아", "브라질", "브루나이",
+    "사모아", "사우디아라비아", "산마리노", "상투메 프린시페", "세네갈", "세르비아", "세이셸", "세인트루시아", "소말리아", "솔로몬 제도",
+    "수단", "수리남", "스리랑카", "스웨덴", "스위스", "스페인", "슬로바키아", "슬로베니아", "시리아", "시에라리온",
+    "싱가포르", "아랍에미리트", "아르메니아", "아르헨티나", "아이슬란드", "아이티", "아일랜드", "아제르바이잔", "아프가니스탄", "안도라",
+    "알바니아", "알제리", "앙골라", "앤티가 바부다", "에리트레아", "에스토니아", "에스와티니", "에티오피아", "에콰도르", "엘살바도르",
+    "영국", "예멘", "오만", "오스트리아", "호주", "혼두라스", "요르단", "우간다", "우루과이", "우즈베키스탄",
+    "우크라이나", "이라크", "이란", "이스라엘", "이집트", "이탈리아", "인도", "인도네시아", "일본", "자메이카",
+    "잠비아", "적도 기니", "조지아", "중국", "중앙아프리카 공화국", "지부티", "짐바브웨", "차드", "체코", "칠레",
+    "카메룬", "카보베르데", "카자흐스탄", "카타르", "캄보디아", "캐나다", "켄야", "코모로", "코스타리카", "코트디부아르",
+    "콜롬비아", "콩고 공화국", "콩고 민주 공화국", "쿠바", "쿠웨이트", "크로아티아", "키르기스스탄", "키리바시", "타지키스탄", "탄자니아",
+    "태국", "터키(튀르키예)", "토고", "통가", "투valu", "튀니지", "트리니다드 토바고", "파나마", "파라과이", "파키스탄",
+    "파푸아뉴기니", "팔라우", "페루", "포르투갈", "폴란드", "프랑스", "피지", "핀란드", "필리핀"
+]
 
-# 헤더 영역
-st.title("🌏 193개국 세계 대표 음식 & 맛집 가이드")
-st.markdown("원하는 대륙과 국가를 선택하여 전 세계 미식을 탐방해보세요!")
-st.divider()
-
-if not FOOD_DATA:
-    st.error("`countries_food.json` 파일이 존재하지 않거나 데이터를 불러올 수 없습니다.")
-else:
-    # 사이드바: 검색 및 필터링
-    st.sidebar.header("🗺️ 국가 검색 및 필터")
-    
-    # 대륙 목록 추출
-    continents = ["전체"] + sorted(list(set(info.get("continent", "기타") for info in FOOD_DATA.values())))
-    selected_continent = st.sidebar.selectbox("대륙 선택:", continents)
-    
-    # 대륙별 필터링 적용
-    if selected_continent == "전체":
-        filtered_countries = list(FOOD_DATA.keys())
-    else:
-        filtered_countries = [
-            country for country, info in FOOD_DATA.items() 
-            if info.get("continent") == selected_continent
-        ]
-
-    # 국가 선택
-    selected_country = st.sidebar.selectbox(
-        f"탐방할 국가 선택 ({len(filtered_countries)}개국):",
-        filtered_countries
+# 3. 사이드바 - 설정 영역
+with st.sidebar:
+    st.header("⚙️ 옵션 설정")
+    selected_country = st.selectbox("UN 회원국 선택 (193개국)", UN_COUNTRIES)
+    detail_level = st.select_slider(
+        "정보 상세도",
+        options=["간단히", "표준", "상세히"],
+        value="표준"
     )
 
-    # 선택된 국가의 데이터 불러오기
-    data = FOOD_DATA[selected_country]
+# 4. 프롬프트 템플릿 생성 엔진
+def build_prompt(country, detail):
+    return f"""
+[역할]
+당신은 전 세계의 미식 문화와 국가별 대표 요리에 정통한 '세계 전문 푸드 도슨트'입니다.
 
-    # 메인 화면 레이아웃
-    col1, col2 = st.columns([1, 1], gap="large")
+[목표]
+{country}의 대표 음식, 그 음식의 미식적 특징, 그리고 해당 음식을 맛볼 수 있는 추천 맛집(현지 또는 상징적 레스토랑)을 안내하세요.
 
-    with col1:
-        st.subheader(f"🍽️ {selected_country} - {data.get('food_name', '대표 음식')}")
-        
-        if "image_url" in data and data["image_url"]:
-            st.image(data["image_url"], use_container_width=True)
-            
-        st.write(data.get("description", "설명이 없습니다."))
-        st.info(data.get("restaurant", "맛집 정보가 없습니다."))
+[출력 요구사항]
+1. 국가명: {country}
+2. 대표 음식 (Signature Dish): 가장 상징적인 음식 1~2개 (원어/영문 포함)
+3. 음식 특징: 주재료, 조리법, 향신료, 맛의 스펙트럼 중심 작성 (상세도: {detail})
+4. 추천 맛집 (Recommended Restaurant): 해당 음식을 파는 대표 레스토랑 상호명, 위치(도시), 추천 이유 작성
 
-    with col2:
-        st.subheader("💡 맛있게 먹는 법 (How to Eat)")
-        how_to_eat = data.get("how_to_eat", [])
-        if how_to_eat:
-            for i, tip in enumerate(how_to_eat, 1):
-                st.markdown(f"**{i}.** {tip}")
-        else:
-            st.write("먹는 팁 정보가 준비 중입니다.")
+[작성 양식]
+### 📌 {country} 미식 가이드
+- **대표 음식**: [음식명]
+- **음식 특징**: [특징 설명]
+- **추천 맛집**: [상호명 / 도시] - [추천 이유]
+"""
 
-        st.divider()
-        st.subheader("⭐ 이 음식 평가하기")
-        rating = st.slider("이 음식을 얼마나 좋아하시나요?", 1, 5, 5)
-        if st.button("평가 제출"):
-            st.success(f"{data.get('food_name')}에 {rating}점을 남겨주셨습니다!")
+# 5. 메인 화면 출력 및 제어
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("📄 생성된 최종 프롬프트")
+    generated_prompt = build_prompt(selected_country, detail_level)
+    st.code(generated_prompt, language="markdown")
+
+with col2:
+    st.subheader("🚀 실행 결과 테스트")
+    st.info("LLM API 키를 연동하면 아래 버튼 클릭 시 실시간 답변을 받아볼 수 있습니다.")
+    
+    if st.button(f"'{selected_country}' 음식 정보 생성 실행"):
+        # API 연동 영역 (예시 코드로 동작 프레임 제공)
+        with st.spinner("미식 정보를 생성하는 중입니다..."):
+            st.success(f"[{selected_country}] 프롬프트 전송 완료!")
+            st.markdown(f"""
+### 📌 {selected_country} 미식 가이드 (예시 출력 결과)
+- **대표 음식**: 샘플 대표 요리 (Sample Dish)
+- **음식 특징**: {detail_level} 수준으로 생성된 음식의 재료 및 맛 설명이 표시됩니다.
+- **추천 맛집**: Sample Restaurant / 수도 - 현지 전통 방식으로 요리하는 유명 맛집입니다.
+            """)
